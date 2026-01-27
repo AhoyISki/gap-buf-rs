@@ -1,8 +1,8 @@
-# gapbuf-rs
+# gapbuffer-rs
 
-[![Crates.io](https://img.shields.io/crates/v/gapbuf.svg)](https://crates.io/crates/gapbuf)
-[![Docs.rs](https://docs.rs/gapbuf/badge.svg)](https://docs.rs/gapbuf)
-[![Actions Status](https://github.com/frozenlib/gapbuf-rs/workflows/CI/badge.svg)](https://github.com/frozenlib/gapbuf-rs/actions)
+[![Crates.io](https://img.shields.io/crates/v/gapbuffer.svg)](https://crates.io/crates/gapbuf)
+[![Docs.rs](https://docs.rs/gapbuf/badge.svg)](https://docs.rs/gapbuffer)
+[![Actions Status](https://github.com/AhoyISki/gapbuffer-rs/workflows/CI/badge.svg)](https://github.com/AhoyISki/gapbuffer-rs/actions)
 
 Generic gap buffer implementation in Rust.
 
