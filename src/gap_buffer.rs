@@ -524,6 +524,41 @@ impl<T> GapBuffer<T> {
         }
     }
 
+    /// Creates an extracting iterator that removes elements from the specified range in the GapBuffer based on a predicate
+    ///
+    /// Note that this iterator will only remove elements that are consumed. If dropped, it will retain the remaining elements.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the `range` is out of bounds.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use gapbuf::gap_buffer;
+    ///
+    /// let mut buf = gap_buffer![1, 2, 3, 4];
+    ///
+    /// let d : Vec<_> = buf.extract_if(.., |num| *num % 2 == 1).collect();
+    /// assert_eq!(buf, [2, 4]);
+    /// assert_eq!(d, [1, 3]);
+    ///
+    /// buf.extract_if(.., |_| true);
+    /// assert_eq!(buf.is_empty(), false);
+    /// ```
+    pub fn extract_if<F>(&mut self, range: impl RangeBounds<usize>, filter: F) -> ExtractIf<'_, T, F>
+    where
+        F: FnMut(&mut T) -> bool
+    {
+        let (idx, end) = self.to_idx_len(range);
+        ExtractIf {
+            buf: self,
+            idx,
+            end,
+            pred: filter
+        }
+    }
+
     /// Creates a splicing iterator
     /// that replaces the specified range in the GapBuffer with the given replace_with iterator and
     /// yields the removed items.
@@ -563,13 +598,13 @@ impl<T> GapBuffer<T> {
 /// A splicing iterator for [`GapBuffer`].
 ///
 /// This struct is created by [`GapBuffer::splice`].
-pub struct Splice<'a, T: 'a, I: Iterator<Item = T>> {
-    buf: &'a mut GapBuffer<T>,
+pub struct Splice<'gb, T: 'gb, I: Iterator<Item = T>> {
+    buf: &'gb mut GapBuffer<T>,
     idx: usize,
     end: usize,
     iter: Fuse<I>,
 }
-impl<'a, T: 'a, I: Iterator<Item = T>> Iterator for Splice<'a, T, I> {
+impl<'gb, T: 'gb, I: Iterator<Item = T>> Iterator for Splice<'gb, T, I> {
     type Item = T;
 
     fn next(&mut self) -> Option<T> {
@@ -592,15 +627,15 @@ impl<'a, T: 'a, I: Iterator<Item = T>> Iterator for Splice<'a, T, I> {
         (size, Some(size))
     }
 }
-impl<'a, T: 'a, I: Iterator<Item = T>> Drop for Splice<'a, T, I> {
+impl<'gb, T: 'gb, I: Iterator<Item = T>> Drop for Splice<'gb, T, I> {
     fn drop(&mut self) {
         while self.next().is_some() {}
         self.buf.insert_many(self.idx, &mut self.iter);
     }
 }
-impl<'a, T: 'a, I: Iterator<Item = T>> ExactSizeIterator for Splice<'a, T, I> {}
-impl<'a, T: 'a, I: Iterator<Item = T>> FusedIterator for Splice<'a, T, I> {}
-impl<'a, T: 'a, I: DoubleEndedIterator<Item = T>> DoubleEndedIterator for Splice<'a, T, I> {
+impl<'gb, T: 'gb, I: Iterator<Item = T>> ExactSizeIterator for Splice<'gb, T, I> {}
+impl<'gb, T: 'gb, I: Iterator<Item = T>> FusedIterator for Splice<'gb, T, I> {}
+impl<'gb, T: 'gb, I: DoubleEndedIterator<Item = T>> DoubleEndedIterator for Splice<'gb, T, I> {
     fn next_back(&mut self) -> Option<T> {
         if self.idx < self.end {
             let i = self.end - 1;
@@ -679,8 +714,8 @@ impl<T> Extend<T> for GapBuffer<T> {
         self.insert_many(len, iter);
     }
 }
-impl<'a, T: 'a + Copy> Extend<&'a T> for GapBuffer<T> {
-    fn extend<I: IntoIterator<Item = &'a T>>(&mut self, iter: I) {
+impl<'gb, T: 'gb + Copy> Extend<&'gb T> for GapBuffer<T> {
+    fn extend<I: IntoIterator<Item = &'gb T>>(&mut self, iter: I) {
         self.extend(iter.into_iter().cloned());
     }
 }
@@ -740,20 +775,20 @@ impl<T> Drop for RawGapBuffer<T> {
 ///
 /// This struct is created by [`Slice::range`].
 #[derive(Hash)]
-pub struct Range<'a, T: 'a> {
+pub struct Range<'gb, T: 'gb> {
     s: Slice<T>,
-    _phantom: PhantomData<&'a [T]>,
+    _phantom: PhantomData<&'gb [T]>,
 }
 
 /// Mutable sub-range of [`GapBuffer`].
 ///
 /// This struct is created by [`Slice::range_mut`].
 #[derive(Hash)]
-pub struct RangeMut<'a, T: 'a> {
+pub struct RangeMut<'gb, T: 'gb> {
     s: Slice<T>,
-    _phantom: PhantomData<&'a mut [T]>,
+    _phantom: PhantomData<&'gb mut [T]>,
 }
-impl<'a, T: 'a> Range<'a, T> {
+impl<'gb, T: 'gb> Range<'gb, T> {
     #[inline]
     const unsafe fn new(s: Slice<T>) -> Self {
         Range {
@@ -772,14 +807,14 @@ impl<'a, T: 'a> Range<'a, T> {
     ///
     /// Unlike [`Slice::get`], return value not borrow `self`.
     #[inline]
-    pub fn get(&self, index: usize) -> Option<&'a T> {
+    pub fn get(&self, index: usize) -> Option<&'gb T> {
         unsafe { self.s.get_with_lifetime(index) }
     }
 
     /// Return a immutable sub-range of this Slice.
     ///
     /// Unlike [`Slice::range`], return value not borrow `self`.
-    pub fn range(&self, range: impl RangeBounds<usize>) -> Range<'a, T> {
+    pub fn range(&self, range: impl RangeBounds<usize>) -> Range<'gb, T> {
         unsafe { self.range_with_lifetime(range) }
     }
 
@@ -787,11 +822,11 @@ impl<'a, T: 'a> Range<'a, T> {
     /// First slice is before gap. Second slice is after gap.
     ///
     /// Unlike [`Slice::as_slices`], return value not borrow `self`.
-    pub fn as_slices(&self) -> (&'a [T], &'a [T]) {
+    pub fn as_slices(&self) -> (&'gb [T], &'gb [T]) {
         unsafe { self.as_slices_with_lifetime() }
     }
 }
-impl<'a, T: 'a> RangeMut<'a, T> {
+impl<'gb, T: 'gb> RangeMut<'gb, T> {
     #[inline]
     const unsafe fn new(s: Slice<T>) -> Self {
         RangeMut {
@@ -884,7 +919,7 @@ impl<T> Slice<T> {
         unsafe { self.get_with_lifetime(index) }
     }
     #[inline]
-    unsafe fn get_with_lifetime<'a>(&self, index: usize) -> Option<&'a T> {
+    unsafe fn get_with_lifetime<'gb>(&self, index: usize) -> Option<&'gb T> {
         self.get_offset(index).map(|o| &*self.as_ptr().add(o))
     }
 
@@ -932,7 +967,7 @@ impl<T> Slice<T> {
     pub fn range(&self, range: impl RangeBounds<usize>) -> Range<'_, T> {
         unsafe { self.range_with_lifetime(range) }
     }
-    unsafe fn range_with_lifetime<'a>(&self, range: impl RangeBounds<usize>) -> Range<'a, T> {
+    unsafe fn range_with_lifetime<'gb>(&self, range: impl RangeBounds<usize>) -> Range<'gb, T> {
         Range::new(self.range_slice(range))
     }
 
@@ -1028,7 +1063,7 @@ impl<T> Slice<T> {
     pub fn as_slices(&self) -> (&[T], &[T]) {
         unsafe { self.as_slices_with_lifetime() }
     }
-    const unsafe fn as_slices_with_lifetime<'a>(&self) -> (&'a [T], &'a [T]) {
+    const unsafe fn as_slices_with_lifetime<'gb>(&self) -> (&'gb [T], &'gb [T]) {
         let p0 = self.as_ptr();
         let c1 = self.len - self.gap;
         let p1 = p0.add(self.cap - c1);
@@ -1362,10 +1397,10 @@ impl<T: Ord> Ord for Slice<T> {
 ////////////////////////////////////////////////////////////////////////////////
 
 /// Immutable GapBuffer iterator.
-pub type Iter<'a, T> = Chain<slice::Iter<'a, T>, slice::Iter<'a, T>>;
+pub type Iter<'gb, T> = Chain<slice::Iter<'gb, T>, slice::Iter<'gb, T>>;
 
 /// Mutable GapBuffer iterator.
-pub type IterMut<'a, T> = Chain<slice::IterMut<'a, T>, slice::IterMut<'a, T>>;
+pub type IterMut<'gb, T> = Chain<slice::IterMut<'gb, T>, slice::IterMut<'gb, T>>;
 
 /// An iterator that moves out of a [`GapBuffer`].
 pub struct IntoIter<T> {
@@ -1398,54 +1433,56 @@ impl<T> IntoIterator for GapBuffer<T> {
     }
 }
 
-impl<'a, T> IntoIterator for &'a GapBuffer<T> {
-    type Item = &'a T;
-    type IntoIter = Iter<'a, T>;
-    fn into_iter(self) -> Iter<'a, T> {
+impl<'gb, T> IntoIterator for &'gb GapBuffer<T> {
+    type Item = &'gb T;
+    type IntoIter = Iter<'gb, T>;
+    fn into_iter(self) -> Iter<'gb, T> {
         self.iter()
     }
 }
-impl<'a, T> IntoIterator for &'a Range<'_, T> {
-    type Item = &'a T;
-    type IntoIter = Iter<'a, T>;
-    fn into_iter(self) -> Iter<'a, T> {
+impl<'gb, T> IntoIterator for &'gb Range<'_, T> {
+    type Item = &'gb T;
+    type IntoIter = Iter<'gb, T>;
+    fn into_iter(self) -> Iter<'gb, T> {
         self.iter()
     }
 }
-impl<'a, T> IntoIterator for &'a RangeMut<'_, T> {
-    type Item = &'a T;
-    type IntoIter = Iter<'a, T>;
-    fn into_iter(self) -> Iter<'a, T> {
-        self.iter()
-    }
-}
-
-impl<'a, T> IntoIterator for &'a Slice<T> {
-    type Item = &'a T;
-    type IntoIter = Iter<'a, T>;
-    fn into_iter(self) -> Iter<'a, T> {
+impl<'gb, T> IntoIterator for &'gb RangeMut<'_, T> {
+    type Item = &'gb T;
+    type IntoIter = Iter<'gb, T>;
+    fn into_iter(self) -> Iter<'gb, T> {
         self.iter()
     }
 }
 
-impl<'a, T> IntoIterator for &'a mut GapBuffer<T> {
-    type Item = &'a mut T;
-    type IntoIter = IterMut<'a, T>;
-    fn into_iter(self) -> IterMut<'a, T> {
+impl<'gb, T> IntoIterator for &'gb Slice<T> {
+    type Item = &'gb T;
+    type IntoIter = Iter<'gb, T>;
+    fn into_iter(self) -> Iter<'gb, T> {
+        self.iter()
+    }
+}
+
+impl<'gb, T> IntoIterator for &'gb mut GapBuffer<T> {
+    type Item = &'gb mut T;
+    type IntoIter = IterMut<'gb, T>;
+    fn into_iter(self) -> IterMut<'gb, T> {
         self.iter_mut()
     }
 }
-impl<'a, T> IntoIterator for &'a mut RangeMut<'a, T> {
-    type Item = &'a mut T;
-    type IntoIter = IterMut<'a, T>;
-    fn into_iter(self) -> IterMut<'a, T> {
+
+impl<'gb, T> IntoIterator for &'gb mut RangeMut<'gb, T> {
+    type Item = &'gb mut T;
+    type IntoIter = IterMut<'gb, T>;
+    fn into_iter(self) -> IterMut<'gb, T> {
         self.iter_mut()
     }
 }
-impl<'a, T> IntoIterator for &'a mut Slice<T> {
-    type Item = &'a mut T;
-    type IntoIter = IterMut<'a, T>;
-    fn into_iter(self) -> IterMut<'a, T> {
+
+impl<'gb, T> IntoIterator for &'gb mut Slice<T> {
+    type Item = &'gb mut T;
+    type IntoIter = IterMut<'gb, T>;
+    fn into_iter(self) -> IterMut<'gb, T> {
         self.iter_mut()
     }
 }
@@ -1453,11 +1490,12 @@ impl<'a, T> IntoIterator for &'a mut Slice<T> {
 /// A draining iterator for [`GapBuffer`].
 ///
 /// This struct is created by [`GapBuffer::drain`].
-pub struct Drain<'a, T: 'a> {
-    buf: &'a mut GapBuffer<T>,
+pub struct Drain<'gb, T: 'gb> {
+    buf: &'gb mut GapBuffer<T>,
     idx: usize,
     len: usize,
 }
+
 impl<T> Iterator for Drain<'_, T> {
     type Item = T;
     fn next(&mut self) -> Option<T> {
@@ -1472,6 +1510,7 @@ impl<T> Iterator for Drain<'_, T> {
         (self.len, Some(self.len))
     }
 }
+
 impl<T> Drop for Drain<'_, T> {
     fn drop(&mut self) {
         let len = self.len;
@@ -1481,3 +1520,40 @@ impl<T> Drop for Drain<'_, T> {
 
 impl<T> ExactSizeIterator for Drain<'_, T> {}
 impl<T> FusedIterator for Drain<'_, T> {}
+
+/// An iterator that conditionally extracts from a [`GapBuffer`].
+///
+/// this struct is created by [`GapBuffer::extract_if`].
+#[must_use]
+pub struct ExtractIf<'gb, T: 'gb, F> {
+    buf: &'gb mut GapBuffer<T>,
+    idx: usize,
+    end: usize,
+    pred: F,
+}
+
+impl<T, F> Iterator for ExtractIf<'_, T, F>
+where
+    F: FnMut(&mut T) -> bool
+{
+    type Item = T;
+
+    fn next(&mut self) -> Option<T> {
+        while self.idx < self.end {
+            if (self.pred)(self.buf.get_mut(self.idx).unwrap()) {
+                self.end -= 1;
+                return Some(self.buf.remove(self.idx));
+            } else {
+                self.idx += 1;
+            }
+        }
+
+        None
+    }
+}
+
+impl<T, F> FusedIterator for ExtractIf<'_, T, F>
+where
+    F: FnMut(&mut T) -> bool
+{
+}
