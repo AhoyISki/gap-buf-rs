@@ -1,11 +1,11 @@
 [package]
-name = "gapbuffer"
+name = "gap-buf"
 version = "0.1.0"
 authors = ["FrozenLib", "AhoyISki"]
 license = "MIT OR Apache-2.0"
 readme = "README.md"
-repository = "https://github.com/AhoyISki/gapbuffer-rs"
-documentation = "https://docs.rs/gapbuffer/"
+repository = "https://github.com/AhoyISki/gap-buf-rs"
+documentation = "https://docs.rs/gap-buf/"
 keywords = ["gap", "gapbuffer"]
 categories = ["data-structures"]
 description = "Generic gap buffer."

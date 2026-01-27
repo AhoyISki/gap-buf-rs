@@ -17,7 +17,7 @@ use std::slice;
 /// - Create a [`GapBuffer`] containing a given list of elements:
 ///
 /// ```
-/// use gapbuf::gap_buffer;
+/// use gap_buf::gap_buffer;
 /// let b = gap_buffer![1, 2, 3];
 /// assert_eq!(b.len(), 3);
 /// assert_eq!(b[0], 1);
@@ -28,14 +28,12 @@ use std::slice;
 /// - Create a [`GapBuffer`] from a given element and size:
 ///
 /// ```
-/// use gapbuf::gap_buffer;
+/// use gap_buf::gap_buffer;
 /// let b = gap_buffer!["abc"; 2];
 /// assert_eq!(b.len(), 2);
 /// assert_eq!(b[0], "abc");
 /// assert_eq!(b[1], "abc");
 /// ```
-///
-/// [`GapBuffer`]: ../gapbuf/struct.GapBuffer.html
 #[macro_export]
 macro_rules! gap_buffer {
     ($elem:expr; $n:expr) => (
@@ -70,7 +68,7 @@ impl<T> GapBuffer<T> {
     ///
     /// # Examples
     /// ```
-    /// # use gapbuf::GapBuffer;
+    /// # use gap_buf::GapBuffer;
     /// let mut buf = GapBuffer::<i32>::new();
     ///
     /// assert_eq!(buf.is_empty(), true);
@@ -79,7 +77,7 @@ impl<T> GapBuffer<T> {
     /// ```
     ///
     /// ```
-    /// use gapbuf::GapBuffer;
+    /// use gap_buf::GapBuffer;
     ///
     /// let mut buf = GapBuffer::new();
     /// buf.push_back(5);
@@ -93,7 +91,7 @@ impl<T> GapBuffer<T> {
     ///
     /// # Examples
     /// ```
-    /// use gapbuf::GapBuffer;
+    /// use gap_buf::GapBuffer;
     ///
     /// let buf: GapBuffer<i32> = GapBuffer::with_capacity(5);
     /// assert_eq!(buf.is_empty(), true);
@@ -110,7 +108,7 @@ impl<T> GapBuffer<T> {
     ///
     /// # Examples
     /// ```
-    /// use gapbuf::GapBuffer;
+    /// use gap_buf::GapBuffer;
     ///
     /// let buf: GapBuffer<i32> = GapBuffer::with_capacity(10);
     /// assert_eq!(buf.capacity(), 10);
@@ -130,7 +128,7 @@ impl<T> GapBuffer<T> {
     ///
     /// # Examples
     /// ```
-    /// use gapbuf::GapBuffer;
+    /// use gap_buf::GapBuffer;
     ///
     /// let mut buf = GapBuffer::new();
     /// buf.push_back(1);
@@ -154,7 +152,7 @@ impl<T> GapBuffer<T> {
     ///
     /// # Examples
     /// ```
-    /// use gapbuf::GapBuffer;
+    /// use gap_buf::GapBuffer;
     ///
     /// let mut buf = GapBuffer::new();
     /// buf.push_back(1);
@@ -191,7 +189,7 @@ impl<T> GapBuffer<T> {
     ///
     /// # Examples
     /// ```
-    /// use gapbuf::GapBuffer;
+    /// use gap_buf::GapBuffer;
     ///
     /// let mut buf = GapBuffer::new();
     /// buf.push_back(1);
@@ -350,7 +348,7 @@ impl<T> GapBuffer<T> {
     ///
     /// # Examples
     /// ```
-    /// use gapbuf::gap_buffer;
+    /// use gap_buf::gap_buffer;
     ///
     /// let mut buf = gap_buffer![1, 2, 3, 4, 5];
     /// buf.set_gap(5);
@@ -390,7 +388,7 @@ impl<T> GapBuffer<T> {
     ///
     /// # Examples
     /// ```
-    /// use gapbuf::gap_buffer;
+    /// use gap_buf::gap_buffer;
     ///
     /// let mut buf = gap_buffer![1, 2, 3, 4, 5];
     /// let value = buf.remove(0);
@@ -431,7 +429,7 @@ impl<T> GapBuffer<T> {
     /// # Examples
     ///
     /// ```
-    /// use gapbuf::gap_buffer;
+    /// use gap_buf::gap_buffer;
     ///
     /// let mut buf = gap_buffer![1, 2, 3, 4];
     /// buf.truncate(2);
@@ -458,7 +456,7 @@ impl<T> GapBuffer<T> {
     /// # Examples
     ///
     /// ```
-    /// use gapbuf::gap_buffer;
+    /// use gap_buf::gap_buffer;
     ///
     /// let mut buf = gap_buffer![1, 2, 3, 4];
     /// buf.retain(|&x| x%2 == 0);
@@ -504,7 +502,7 @@ impl<T> GapBuffer<T> {
     /// # Examples
     ///
     /// ```
-    /// use gapbuf::gap_buffer;
+    /// use gap_buf::gap_buffer;
     ///
     /// let mut buf = gap_buffer![1, 2, 3, 4];
     ///
@@ -535,7 +533,7 @@ impl<T> GapBuffer<T> {
     /// # Examples
     ///
     /// ```
-    /// use gapbuf::gap_buffer;
+    /// use gap_buf::gap_buffer;
     ///
     /// let mut buf = gap_buffer![1, 2, 3, 4];
     ///
@@ -572,7 +570,7 @@ impl<T> GapBuffer<T> {
     /// # Examples
     ///
     /// ```
-    /// use gapbuf::gap_buffer;
+    /// use gap_buf::gap_buffer;
     ///
     /// let mut b = gap_buffer![1, 2, 3, 4];
     /// let r : Vec<_> = b.splice(1..3, vec![7, 8, 9]).collect();
@@ -954,7 +952,7 @@ impl<T> Slice<T> {
     ///
     /// # Examples
     /// ```
-    /// use gapbuf::gap_buffer;
+    /// use gap_buf::gap_buffer;
     ///
     /// let buf = gap_buffer![1, 2, 3, 4, 5];
     ///
@@ -978,7 +976,7 @@ impl<T> Slice<T> {
     ///
     /// # Examples
     /// ```
-    /// use gapbuf::gap_buffer;
+    /// use gap_buf::gap_buffer;
     ///
     /// let mut buf = gap_buffer![1, 2, 3, 4, 5];
     /// {
@@ -1052,7 +1050,7 @@ impl<T> Slice<T> {
     ///
     /// # Examples
     /// ```
-    /// use gapbuf::gap_buffer;
+    /// use gap_buf::gap_buffer;
     ///
     /// let mut buf = gap_buffer![1, 2, 3, 4, 5];
     /// buf.set_gap(2);
@@ -1078,7 +1076,7 @@ impl<T> Slice<T> {
     ///
     /// # Examples
     /// ```
-    /// use gapbuf::gap_buffer;
+    /// use gap_buf::gap_buffer;
     ///
     /// let mut buf = gap_buffer![1, 2, 3, 4, 5];
     /// buf.set_gap(2);
