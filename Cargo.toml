@@ -1,6 +1,6 @@
 [package]
 name = "gap-buf"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["FrozenLib", "AhoyISki"]
 license = "MIT OR Apache-2.0"
 readme = "README.md"
@@ -11,12 +11,16 @@ categories = ["data-structures"]
 description = "Generic gap buffer."
 edition = "2024"
 
-[features]
-docs-rs = []
+[dependencies]
+bincode = { version = "2.0.1", optional = true }
 
 [dev-dependencies]
 test-strategy = "0.2.0"
 proptest = "1.0.0"
+
+[features]
+docs-rs = []
+bincode = ["dep:bincode"]
 
 [package.metadata.docs.rs]
 features = ["docs-rs"]
