@@ -1191,7 +1191,7 @@ unsafe impl<T: Sync> Sync for Slice<T> {}
 unsafe impl<T: Send> Send for Slice<T> {}
 
 #[cfg(feature = "bincode")]
-impl<T: bincode::Decode<Context> + 'static, Context> bincode::Decode<Context> for Slice<T> {
+impl<T: bincode::Decode<Context>, Context> bincode::Decode<Context> for Slice<T> {
     fn decode<D: bincode::de::Decoder<Context = Context>>(
         decoder: &mut D,
     ) -> Result<Self, bincode::error::DecodeError> {
@@ -1201,7 +1201,7 @@ impl<T: bincode::Decode<Context> + 'static, Context> bincode::Decode<Context> fo
 }
 
 #[cfg(feature = "bincode")]
-impl<T: bincode::Encode + 'static> bincode::Encode for Slice<T> {
+impl<T: bincode::Encode> bincode::Encode for Slice<T> {
     fn encode<E: bincode::enc::Encoder>(
         &self,
         encoder: &mut E,
