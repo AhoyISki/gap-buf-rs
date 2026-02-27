@@ -1,6 +1,6 @@
 [package]
 name = "gap-buf"
-version = "0.3.0"
+version = "0.3.1"
 authors = ["FrozenLib", "AhoyISki"]
 license = "MIT OR Apache-2.0"
 readme = "README.md"
@@ -13,7 +13,7 @@ edition = "2024"
 
 [dependencies]
 bincode = { version = "2.0.1", optional = true }
-unty = "0.0.5"
+unty = { version = "0.0.5", optional = true }
 
 [dev-dependencies]
 test-strategy = "0.2.0"
@@ -22,7 +22,7 @@ proptest = "1.0.0"
 [features]
 default = ["bincode"]
 docs-rs = []
-bincode = ["dep:bincode"]
+bincode = ["dep:bincode", "dep:unty"]
 
 [package.metadata.docs.rs]
 features = ["docs-rs"]
