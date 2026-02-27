@@ -13,12 +13,14 @@ edition = "2024"
 
 [dependencies]
 bincode = { version = "2.0.1", optional = true }
+unty = "0.0.5"
 
 [dev-dependencies]
 test-strategy = "0.2.0"
 proptest = "1.0.0"
 
 [features]
+default = ["bincode"]
 docs-rs = []
 bincode = ["dep:bincode"]
 

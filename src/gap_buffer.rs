@@ -1206,9 +1206,24 @@ impl<T: bincode::Encode + 'static> bincode::Encode for Slice<T> {
         &self,
         encoder: &mut E,
     ) -> Result<(), bincode::error::EncodeError> {
+        use bincode::enc::write::Writer;
         let (s0, s1) = self.as_slices();
-        bincode::Encode::encode(s0, encoder)?;
-        bincode::Encode::encode(s1, encoder)
+
+        bincode::Encode::encode(&(self.len as u64), encoder)?;
+
+        if unty::type_equal::<T, u8>() {
+            // Safety: T = u8
+            let s0: &[u8] = unsafe { core::mem::transmute(s0) };
+            encoder.writer().write(s0)?;
+            let s1: &[u8] = unsafe { core::mem::transmute(s1) };
+            encoder.writer().write(s1)?;
+        } else {
+            for item in self {
+                item.encode(encoder)?;
+            }
+        }
+
+        Ok(())
     }
 }
 
