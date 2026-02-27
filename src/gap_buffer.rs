@@ -59,6 +59,7 @@ macro_rules! gap_buffer {
 ///
 /// `GapBuffer<T>` has methods similar to [`Vec`](std::vec::Vec).
 #[derive(Hash)]
+#[cfg_attr(feature = "bincode", derive(bincode::Decode, bincode::Encode))]
 pub struct GapBuffer<T>(RawGapBuffer<T>);
 
 impl<T> GapBuffer<T> {
@@ -724,6 +725,7 @@ impl<'gb, T: 'gb + Copy> Extend<&'gb T> for GapBuffer<T> {
 }
 
 #[derive(Hash)]
+#[cfg_attr(feature = "bincode", derive(bincode::Decode, bincode::Encode))]
 struct RawGapBuffer<T>(Slice<T>);
 
 impl<T> RawGapBuffer<T> {
@@ -1196,6 +1198,19 @@ impl<T: bincode::Decode<Context>, Context> bincode::Decode<Context> for Slice<T>
         decoder: &mut D,
     ) -> Result<Self, bincode::error::DecodeError> {
         let vec: Vec<T> = bincode::Decode::decode(decoder)?;
+        Ok(Self::from_vec(vec))
+    }
+}
+
+#[cfg(feature = "bincode")]
+impl<'de, T, Context> bincode::BorrowDecode<'de, Context> for Slice<T>
+where
+    T: bincode::BorrowDecode<'de, Context>,
+{
+    fn borrow_decode<D: bincode::de::BorrowDecoder<'de, Context = Context>>(
+        decoder: &mut D,
+    ) -> Result<Self, bincode::error::DecodeError> {
+        let vec: Vec<T> = bincode::BorrowDecode::borrow_decode(decoder)?;
         Ok(Self::from_vec(vec))
     }
 }
