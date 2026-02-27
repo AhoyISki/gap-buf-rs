@@ -1,6 +1,6 @@
 [package]
 name = "gap-buf"
-version = "0.3.1"
+version = "0.4.0"
 authors = ["FrozenLib", "AhoyISki"]
 license = "MIT OR Apache-2.0"
 readme = "README.md"
@@ -20,7 +20,6 @@ test-strategy = "0.2.0"
 proptest = "1.0.0"
 
 [features]
-default = ["bincode"]
 docs-rs = []
 bincode = ["dep:bincode", "dep:unty"]
 
