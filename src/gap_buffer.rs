@@ -506,6 +506,7 @@ impl<T> GapBuffer<T> {
     /// buf.drain(..);
     /// assert_eq!(buf.is_empty(), true);
     /// ```
+    #[track_caller]
     pub fn drain(&mut self, range: impl RangeBounds<usize>) -> Drain<'_, T> {
         let (idx, len) = self.to_idx_len(range);
         Drain {
@@ -537,6 +538,7 @@ impl<T> GapBuffer<T> {
     /// buf.extract_if(.., |_| true);
     /// assert_eq!(buf.is_empty(), false);
     /// ```
+    #[track_caller]
     pub fn extract_if<F>(
         &mut self,
         range: impl RangeBounds<usize>,
@@ -575,6 +577,7 @@ impl<T> GapBuffer<T> {
     /// assert_eq!(b, [1, 7, 8, 9, 4]);
     /// assert_eq!(r, [2, 3]);
     /// ```
+    #[track_caller]
     pub fn splice<I: IntoIterator<Item = T>>(
         &mut self,
         range: impl RangeBounds<usize>,
@@ -983,6 +986,7 @@ impl<T> Slice<T> {
     /// # Panics
     /// Panics if `a >= self.len()` or `b >= self.len()`.
     #[inline]
+    #[track_caller]
     pub const fn swap(&mut self, a: usize, b: usize) {
         let oa = self.get_offset(a).expect("a is out of bounds.");
         let ob = self.get_offset(b).expect("b is out of bounds.");
@@ -1007,9 +1011,12 @@ impl<T> Slice<T> {
     /// let r2 = r1.range(1..3);
     /// assert_eq!(r2, [3, 4]);
     /// ```
+    #[track_caller]
     pub fn range(&self, range: impl RangeBounds<usize>) -> Range<'_, T> {
         unsafe { self.range_with_lifetime(range) }
     }
+
+    #[track_caller]
     unsafe fn range_with_lifetime<'gb>(&self, range: impl RangeBounds<usize>) -> Range<'gb, T> {
         unsafe { Range::new(self.range_slice(range)) }
     }
@@ -1031,9 +1038,12 @@ impl<T> Slice<T> {
     /// }
     /// assert_eq!(buf, [1, 0, 3, 4, 5]);
     /// ```
+    #[track_caller]
     pub fn range_mut(&mut self, range: impl RangeBounds<usize>) -> RangeMut<'_, T> {
         unsafe { RangeMut::new(self.range_slice(range)) }
     }
+
+    #[track_caller]
     unsafe fn range_slice(&self, range: impl RangeBounds<usize>) -> Slice<T> {
         let (idx, len) = self.to_idx_len(range);
         if len == 0 {
@@ -1060,6 +1070,8 @@ impl<T> Slice<T> {
             len,
         }
     }
+
+    #[track_caller]
     fn to_idx_len(&self, range: impl RangeBounds<usize>) -> (usize, usize) {
         use std::ops::Bound::*;
         const MAX: usize = usize::MAX;
