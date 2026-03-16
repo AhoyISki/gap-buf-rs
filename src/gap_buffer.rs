@@ -1097,7 +1097,7 @@ impl<T> Slice<T> {
         }
 
         if end < idx {
-            panic!("slice index starts at {idx} but ends at {len}");
+            panic!("slice index starts at {idx} but ends at {end}");
         }
         (idx, end - idx)
     }
